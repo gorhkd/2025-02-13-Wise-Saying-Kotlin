@@ -1,4 +1,4 @@
 fun main() {
-    println("Hello World!")
-    println("Hello World!")
+    println("== 명언 앱 ==")
+    println("명령) 종료")
 }
