@@ -1,6 +1,7 @@
 fun main() {
     val qutes = mutableListOf<WiseSaying>()
     initData(qutes)
+
     println("== 명언 앱 ==")
     println("등록, 목록, 삭제 중 하나를 입력해주세요.")
 
@@ -22,9 +23,7 @@ fun main() {
     }
 }
 
-
-data class WiseSaying(val number: Int, var author: String = "익명", var content: String)
-
+    data class WiseSaying(val number: Int, var author: String = "익명", var content: String)
     fun initData(qutes: MutableList<WiseSaying>) {
         qutes.add(WiseSaying(1, "헨리 포드", "실패는 새로운 시작이다."))
         qutes.add(WiseSaying(2, "릭 워렌", "계획 없는 목표는 그냥 바램에 불과하다"))
@@ -37,9 +36,12 @@ data class WiseSaying(val number: Int, var author: String = "익명", var conten
 
     fun create(qutes: MutableList<WiseSaying>) {
         print("명언: ")
-        val content = readln()
+        val content = readlnOrNull()?.takeIf { it.isNotBlank() }
+            ?: throw WiseSayingException(WiseSayingErrorCode.INVALID_INPUT)
+
         print("작가: ")
-        val author = readln()
+        val author = readlnOrNull()?.takeIf { it.isNotBlank() }
+            ?: throw WiseSayingException(WiseSayingErrorCode.INVALID_INPUT)
 
         var num = qutes.maxOf { it.number } + 1
         qutes.add(WiseSaying(num, author, content))
@@ -48,34 +50,66 @@ data class WiseSaying(val number: Int, var author: String = "익명", var conten
     }
 
     fun show(qutes: MutableList<WiseSaying>) {
-        for(q in qutes) {
+        if(qutes.isEmpty()) {
+            println("등록된 명언이 없습니다.")
+            return
+        }
+
+        for(q in qutes.asReversed()) {
            println("${q.number}번 명언  //  작가: ${q.author}  //  명언: ${q.content}")
         }
     }
 
     fun delete(qutes: MutableList<WiseSaying>) {
         print("삭제 번호: ")
-        val num = readln().toInt() - 1
-        qutes.removeAt(num)
-        println("${num + 1}번 명언이 삭제되었습니다.")
+        val num = readlnOrNull()?.toIntOrNull()
+            ?: throw WiseSayingException(WiseSayingErrorCode.INVALID_INPUT)
+
+        val wiseSaying = qutes.find { it.number == num }
+            ?: throw WiseSayingException(WiseSayingErrorCode.NOT_FOUND_WISE_SAYING)
+
+        qutes.remove(wiseSaying)
+        println("${num}번 명언이 삭제되었습니다.")
     }
 
     fun modify(qutes: MutableList<WiseSaying>) {
         print("수정 번호: ")
-        val num = readln().toInt() - 1
-        var wiseSaying = qutes.get(num)
+        val num = readlnOrNull()?.toIntOrNull()
+            ?: throw WiseSayingException(WiseSayingErrorCode.INVALID_INPUT)
+
+        var wiseSaying = qutes.find { it.number == num }
+            ?: throw WiseSayingException(WiseSayingErrorCode.NOT_FOUND_WISE_SAYING)
 
         println("기존 명언: ${wiseSaying.content}")
         print("명언: ")
-        val newContent = readln()
+        val newContent = readlnOrNull()?.takeIf { it.isNotBlank() }
+            ?: throw WiseSayingException(WiseSayingErrorCode.INVALID_INPUT)
 
         println("기존 작가: ${wiseSaying.author}")
         print("작가: ")
-        val newAuthor = readln()
+        val newAuthor = readlnOrNull()?.takeIf { it.isNotBlank() }
+            ?: throw WiseSayingException(WiseSayingErrorCode.INVALID_INPUT)
 
         wiseSaying.content = newContent
         wiseSaying.author = newAuthor
 
-        println("명언이 수정되었습니다.")
+        println("${num}번 명언이 수정되었습니다.")
     }
 
+
+// ========================= 예외 처리 ==============================================
+    object MyHttpStatus {
+        const val OK = 200
+        const val NOT_FOUND = 404
+        const val BAD_REQUEST = 400
+    }
+
+    enum class WiseSayingErrorCode(val status: Int, val code: String, val message: String) {
+        NOT_FOUND_WISE_SAYING(MyHttpStatus.NOT_FOUND, "404", "존재하지 않는 명언입니다."),
+        INVALID_INPUT(MyHttpStatus.BAD_REQUEST, "400", "유효하지 않은 입력입니다.")
+    }
+
+    class WiseSayingException(val errorCode: WiseSayingErrorCode) : RuntimeException(errorCode.message) {
+        fun getStatus(): Int = errorCode.status
+        fun getCode(): String = errorCode.code
+    }
