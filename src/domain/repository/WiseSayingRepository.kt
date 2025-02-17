@@ -8,10 +8,6 @@ import domain.exception.WiseSayingException
 class WiseSayingRepository {
 
     fun findAllList(): List<WiseSaying> {
-        if(quotes.isEmpty()) {
-            throw WiseSayingException(WiseSayingErrorCode.NOT_FOUND_WISE_SAYING)
-        }
-
         return quotes
     }
 

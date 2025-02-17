@@ -1,5 +1,7 @@
 package domain.controller
 
+import domain.exception.WiseSayingErrorCode
+import domain.exception.WiseSayingException
 import domain.service.WiseSayingService
 
 class WiseSayingController {
@@ -15,7 +17,9 @@ class WiseSayingController {
     }
 
     fun show() {
-        val wiseSayingList = wiseSayingService.getAll()
+        val wiseSayingList = wiseSayingService.getAll().takeIf { !it.isEmpty() }
+            ?: throw WiseSayingException(WiseSayingErrorCode.NOT_FOUND_WISE_SAYING)
+
         wiseSayingList.asReversed().forEach { println("${it.number}번 // ${it.author} // ${it.content}") }
     }
 
